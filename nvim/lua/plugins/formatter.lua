@@ -90,6 +90,7 @@ return {
           "ruff_organize_imports",
         },
         toml = { "taplo" },
+        rust = { "rustfmt" },
       },
       format_on_save = {
         timeout_ms = 500,
