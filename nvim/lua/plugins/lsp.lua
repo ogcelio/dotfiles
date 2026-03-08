@@ -23,6 +23,7 @@ return {
           -- "stylua", -- install manually with ':MasonInstall stylua'
 
           -- LSPs
+          "clangd",
           "ruff",
           "taplo",
           "lua_ls",
@@ -50,6 +51,16 @@ return {
         map("n", "<leader>rn", vim.lsp.buf.rename, opts)
         map("n", "<leader>ca", vim.lsp.buf.code_action, opts)
       end
+
+      vim.lsp.config("clangd", {
+        on_attach = on_attach,
+        capabilities = capabilities,
+        init_options = {
+          fallbackFlags = { "-Wall", "-Wextra", "-Wunused-parameter" },
+        },
+      })
+      vim.lsp.enable("clangd")
+
 
       vim.lsp.config("eslint", {
         on_attach = on_attach,
