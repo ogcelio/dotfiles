@@ -11,3 +11,6 @@
 [pull]
   rebase=true
 
+[user]
+	name = ogcelio
+	email = joaocelioaraujosander@gmail.com
