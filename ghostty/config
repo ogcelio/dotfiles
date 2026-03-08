@@ -3,7 +3,7 @@ theme = tokyonightlocal
 
 # Font 
 font-family = JetBrains Mono
-font-size = 28
+font-size = 14
 # Disable Ligatures completely
 font-feature = -calt
 font-feature = -dlig
