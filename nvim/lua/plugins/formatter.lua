@@ -87,6 +87,8 @@ return {
           -- To organize the imports.
           "ruff_organize_imports",
         },
+        c = { "trim_whitespace" },
+        cpp = { "trim_whitespace" },
         toml = { "taplo" },
         rust = { "rustfmt" },
       },
