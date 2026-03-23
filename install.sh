@@ -34,6 +34,8 @@ if [ "$(uname -s)" == "Linux" ]; then
         . /etc/os-release
         if [ "$ID" == "ubuntu" ]; then
             OP_SYSTEM="ubuntu" # aqui é ubuntu
+        elif [ "$ID" == "arch" ] || [ "$ID" == "manjaro" ] || [ "$ID" == "biglinux" ] || [[ "$ID_LIKE" == *"arch"* ]]; then
+            OP_SYSTEM="arch" # Arch based
         else
             # Aqui não sei qual sistema é, mas é Linux
             logerror "This is another Linux distribution: $PRETTY_NAME"
@@ -46,7 +48,7 @@ if [ "$(uname -s)" == "Linux" ]; then
 elif [ "$(uname -s)" == "Darwin" ]; then 
   OP_SYSTEM="darwin" # Aqui é MacOS
 else
-  # Eu não vou rodar se não for MacOS ou Ubuntu
+  # Eu não vou rodar se não for MacOS ou Ubuntu ou Arch
   logerror "It is not safe to run this script on your system."
   exit 1
 fi
@@ -121,12 +123,36 @@ elif [[ "$OP_SYSTEM" == "ubuntu" ]]; then
     sudo apt install zsh -y
     chsh -s $(which zsh)
   else
-    loginfo "nvim já instalado..."
+    loginfo "zsh já instalado..."
   fi
 
 
   loginfo "Installing Ghostty..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)"
+
+elif [[ "$OP_SYSTEM" == "arch" ]]; then
+  loginfo "Your system is Arch-based (BigLinux/Manjaro/Arch), updating packages..."
+  sudo pacman -Syu --noconfirm
+
+  loginfo "Installing apps..."
+  sudo pacman -S --needed --noconfirm \
+    base-devel git openssl zlib bzip2 readline sqlite wget curl \
+    llvm gettext tk tcl gdbm python aria2 xz cmake ninja pkgconf \
+    libtool autoconf automake bat ffmpeg fzf htop nano 7zip \
+    tmux tree procps-ng ttf-fira-code ttf-jetbrains-mono vim neovim \
+    zsh lua unzip luarocks ripgrep tree-sitter-cli ghostty \
+    fastfetch fd github-cli just pandoc shellcheck wireguard-tools \
+    btop ollama chafa nvm pyenv uv
+
+  if [[ "$SHELL" != *zsh* ]]; then
+    loginfo "Changing default shell to zsh..."
+    ZSH_SHELL=$(grep -E "^/(usr/)?bin/zsh$" /etc/shells | tail -n1)
+    if [ -n "$ZSH_SHELL" ]; then
+      sudo chsh -s "$ZSH_SHELL" "$USER"
+    else
+      logerror "Could not find zsh in /etc/shells. Please change it manually."
+    fi
+  fi
 else
   # Eu tenho medo de rodar isso noutro sistema que não testei
   # Mas lendo aqui você pode fazer tudo manualmente
@@ -173,7 +199,7 @@ if ! command -v pyenv &> /dev/null; then
   rm -Rf "${HOME}/.pyenv"
   curl -fsSL https://pyenv.run | bash
   curl -LsSf https://astral.sh/uv/install.sh | sh
-else
+elif [[ "$OP_SYSTEM" != "arch" ]]; then
   loginfo "Pyenv já instalado..."
 fi
 
@@ -181,7 +207,7 @@ if ! command -v uv &> /dev/null; then
   # UV 
   loginfo "Installing uv..."
   curl -LsSf https://astral.sh/uv/install.sh | sh
-else
+elif [[ "$OP_SYSTEM" != "arch" ]]; then
   loginfo "UV já instalado..."
 fi
 
@@ -189,7 +215,7 @@ if ! command -v nvm &> /dev/null; then
   # NVM
   rm -Rf "${HOME}/.nvm"
   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-else
+elif [[ "$OP_SYSTEM" != "arch" ]]; then
   loginfo "NVM já instalado..."
 fi
 
@@ -247,13 +273,19 @@ ln -sf "$HOME/dotfiles/nvim" "$HOME/.config/nvim"
 rm -Rf "$HOME/.config/ghostty"
 ln -sf "$HOME/dotfiles/ghostty" "$HOME/.config/ghostty"
 
-# Google Drive
-rm -Rf "$HOME/gdrive"
-ln -sf "$HOME/Library/CloudStorage/GoogleDrive-todoespacoonline@gmail.com" "$HOME/gdrive"
+# Fastfetch
+rm -Rf "$HOME/.config/fastfetch"
+ln -sf "$HOME/dotfiles/fastfetch" "$HOME/.config/fastfetch"
 
-# Google Drive (Shorter)
-GDRIVE_PATH=$(find "$HOME/Library/CloudStorage" -maxdepth 1 -name "GoogleDrive-*" -type d | head -n 1)
-[ -n "$GDRIVE_PATH" ] && rm -f "$HOME/gdrive" && ln -s "$GDRIVE_PATH" "$HOME/gdrive"
+if [[ "$OP_SYSTEM" == "darwin" ]]; then
+  # Google Drive
+  rm -Rf "$HOME/gdrive"
+  ln -sf "$HOME/Library/CloudStorage/GoogleDrive-todoespacoonline@gmail.com" "$HOME/gdrive"
+
+  # Google Drive (Shorter)
+  GDRIVE_PATH=$(find "$HOME/Library/CloudStorage" -maxdepth 1 -name "GoogleDrive-*" -type d | head -n 1)
+  [ -n "$GDRIVE_PATH" ] && rm -f "$HOME/gdrive" && ln -s "$GDRIVE_PATH" "$HOME/gdrive"
+fi
 
 echo -e "
 [1;33mATENÇÃO: Passos manuais necessários:[0m"
